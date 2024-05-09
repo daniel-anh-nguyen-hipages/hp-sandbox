@@ -1,6 +1,8 @@
-import React, { useState } from "react";
+import { useState } from "react";
 
 import { socket } from "../server/socket";
+
+import { TradieMessage } from "./Message";
 
 export const App = () => {
   const [isSocketConnected, setIsSocketConnected] = useState(false);
@@ -11,7 +13,7 @@ export const App = () => {
 
     setIsSocketConnected(true);
     socket.onMessage((message) => {
-      console.log(message)
+      console.log(message);
     });
   };
 
@@ -21,7 +23,7 @@ export const App = () => {
 
     setIsSocketConnected(false);
     socket.disconnect();
-  }
+  };
 
   return (
     <main className="w-screen h-screen flex flex-col bg-gray-100 p-2">
@@ -40,6 +42,7 @@ export const App = () => {
             Let’s connect & trade up ⤴️
           </button>
         )}
+        <TradieMessage />
       </div>
     </main>
   );
