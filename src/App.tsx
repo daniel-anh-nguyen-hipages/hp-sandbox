@@ -1,49 +1,65 @@
 import { useState } from "react";
+import { getLeads, getProfileInfo, acceptLead } from "../server/api";
 
-import { socket } from "../server/socket";
+const LeadList = () => {
+  const [leads, setLeads] = useState([]);
+  const [profile, setProfile] = useState({});
 
-import { TradieMessage } from "./Message";
+  const fetchData = async () => {
+    const profile = await getProfileInfo();
+    setProfile(profile);
 
-export const App = () => {
-  const [isSocketConnected, setIsSocketConnected] = useState(false);
-
-  /** Connect to socket. */
-  const handleConnect = () => {
-    if (isSocketConnected) return;
-
-    setIsSocketConnected(true);
-    socket.onMessage((message) => {
-      console.log(message);
-    });
+    const leads = await getLeads();
+    setLeads(leads);
   };
 
-  /** Disconnect from socket. */
-  const handleDisconnect = () => {
-    if (!isSocketConnected) return;
-
-    setIsSocketConnected(false);
-    socket.disconnect();
-  };
+  fetchData();
 
   return (
-    <main className="w-screen h-screen flex flex-col bg-gray-100 p-2">
-      <h1 className="px-4 text-3xl">Magical Tradie Chats</h1>
-      <hr className="my-4" />
-      <div className="px-4">
-        {isSocketConnected ? (
-          <button
-            className="bg-red-500 text-white rounded-lg w-80 px-4 py-2"
-            onClick={handleDisconnect}
-          >
-            Disconnect
-          </button>
-        ) : (
-          <button className="px-4 py-2 bg-orange-300 rounded-lg w-80" onClick={handleConnect}>
-            Let’s connect & trade up ⤴️
-          </button>
-        )}
-        <TradieMessage />
-      </div>
-    </main>
+    <div>
+      <h2>Welcome {profile.businessName}</h2>
+      <br />
+      <br />
+      {leads.length &&
+        leads.map((lead) => (
+          <p className="lead-card">
+            <h1>{lead.title}</h1>
+            <p>{lead.description}</p>
+            <p>
+              <strong>Start By:</strong> {lead.startBy}
+            </p>
+            <p>
+              <strong>Contact:</strong> {lead.mobile}
+            </p>
+            <p>
+              <strong>User:</strong> {`${lead.firstName} ${lead.lastName}`}
+            </p>
+            {lead.state !== "accepted" && (
+              <div>
+                <button
+                  onClick={async () => {
+                    if (profile.permissions.updateLeads) {
+                      await acceptLead(lead.leadId);
+                      fetchData();
+                    }
+                  }}
+                >
+                  Accept
+                </button>
+                <button>Reject</button>
+              </div>
+            )}
+          </p>
+        ))}
+    </div>
   );
 };
+
+export const App = () => {
+  return (
+    <div className="App">
+      <h2 className="text-2xl">Hipages leads</h2>
+      <LeadList />
+    </div>
+  );
+}
